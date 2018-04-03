@@ -11,8 +11,8 @@ import talib
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
-import analysis_stock
-import filter_good_stocks
+from common import analysis_stock
+from common import filter_good_stocks
 date_format = '%Y-%m-%d'
 
 def get_EMA(df, N): 
@@ -139,7 +139,7 @@ def const_incr_macd(his_data, begin_date, end_date, const_incr_days):
     beginIndex = -const_incr_days
     for i in range(const_incr_days-1):
         index = (beginIndex + i + 1)
-        if macd_slice['macd'][index] < max_macd or macd_slice['diff'][index] < -0.0:
+        if macd_slice['macd'][index] < max_macd or macd_slice['diff'][index] < -0.05:
             print('max_macd = %f, cur_macd = %f and diff = %f'%(max_macd,\
                 macd_slice['macd'][index], macd_slice['diff'][index]))
             return None
@@ -183,19 +183,20 @@ def main_with_pe_roe():
     遍历所有沪深300的股票，选择市盈率低，同时，净资产收益率高的公司股票。
     '''
     to_filter_stock = ts.get_hs300s()
-    filtered_stock_info = filter_good_stocks.get_low_pe_high_roe(to_filter_stock['code'], 30, 10, 2017, 4)
+    # 根据市盈率，净资产收益率，持股人数(持股人数越多，随机性越强，也不容易被操作?)
+    filtered_stock_info = filter_good_stocks.get_low_pe_high_roe(to_filter_stock['code'], 30, 10, 100000, 2017, 4)
     if len(filtered_stock_info) < 0:
         print('cannot find the stocks: pe<30, roe>10 in 2017-Q04')                                                                                                                                                                                                                                                                                                                                        
         return
     
-    file_name = 'D:\\software\\Python\\DataAnalyze\\stock_proj\\macd\\1.code_range.csv'
-    final_coe_name = 'D:\\software\\Python\\DataAnalyze\\stock_proj\\macd\\1.final_code.csv'
-    filtered_stock_info.to_csv(file_name, sep='\t', index=True)
+    file_name = '.\\test_data\\1.code_range_'+datetime.datetime.now().strftime(date_format)+'.csv'
+    final_coe_name = '.\\test_data\\1.final_code_'+datetime.datetime.now().strftime(date_format)+'.csv'
+    filtered_stock_info.to_csv(file_name, sep=',', index=True)
     
     gold_cross_stock = DataFrame({'code':[], 'name':[], 'macd':[], 'pe':[], 'roe':[]})
     for code in filtered_stock_info['code']:
         #code = '%s, %s'%(code, filtered_stock_info.loc[code, 'name'])
-        print('%s'%code, end=': ')
+        print('%s:%s'%(code, filtered_stock_info.loc[code, 'name']), end=': ')
         his_data = get_macd_by_time_order(code)
         if his_data is None:
             continue
@@ -220,9 +221,11 @@ def main_with_pe_roe():
     print("The Gold cross stocks are:")
     for key in gold_cross_stock:
         print("%s,%s"%(key, gold_cross_stock[key]))
-    gold_cross_stock.to_csv(final_coe_name, sep='\t', index = False)
+    gold_cross_stock.to_csv(final_coe_name, sep=',', index = True)
     
     
 if __name__ == '__main__':
+    print("EXEC begin >>>>>>>")
     main_with_pe_roe()
+    print("<<<<< EXEC end")
         

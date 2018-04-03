@@ -9,11 +9,12 @@ import tushare as ts
 import pandas as pd
 from pandas import DataFrame
 
-def get_low_pe_high_roe(to_filter_stock, highest_pe, lowest_roe, year, quart):
+def get_low_pe_high_roe(to_filter_stock, highest_pe, lowest_roe, holder_min_num, year, quart):
     '''
     获取指定年和季度市盈率小于highest_pe， 同时收益率大于lowest_roe的股票
     入参：hightest_pe: 市盈率的最大值
     lowest_roe:收益率的最小值
+    holder_min_num: 持股人数最小值
     year: 统计年度 
     quart:统计季度
     输出：市盈率小于highest_pe，同时，收益率大于lowest_roe的股票信息。
@@ -30,7 +31,8 @@ def get_low_pe_high_roe(to_filter_stock, highest_pe, lowest_roe, year, quart):
     
     for code in to_filter_stock:
         try:
-            if basics_data.loc[code, 'pe'] < highest_pe and profit_data.loc[code, 'roe'] > lowest_roe:
+            if basics_data.loc[code, 'pe'] < highest_pe and profit_data.loc[code, 'roe'] > lowest_roe \
+                and holder_min_num < basics_data.loc[code, 'holders']:
                 item = DataFrame({'code':code, 'name':profit_data.loc[code, 'name'], 'pe':basics_data.loc[code, 'pe'], \
                                   'roe':profit_data.loc[code, 'roe']},index = [code])
                 df = pd.concat([df.loc[:], item])
